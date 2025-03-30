@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบจัดการห้องพักโรงแรมเขาใหญ่แฟนตาซีรีสอร์ท</title>
+    <style>
+        body {
+            font-family: 'Prompt', 'Sarabun', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            background-color: #1a237e;
+            color: white;
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        nav {
+            background-color: #283593;
+            padding: 10px 20px;
+        }
+        nav a {
+            color: white;
+            margin-right: 15px;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .main-content {
+            display: flex;
+            margin-top: 20px;
+        }
+        .sidebar {
+            width: 250px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-right: 20px;
+        }
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+        }
+        .sidebar li {
+            margin-bottom: 10px;
+        }
+        .sidebar a {
+            display: block;
+            padding: 10px;
+            border-radius: 4px;
+            color: #333;
+            text-decoration: none;
+            transition: background-color 0.3s;
+        }
+        .sidebar a:hover, .sidebar a.active {
+            background-color: #e8eaf6;
+            color: #1a237e;
+        }
+        .sidebar a.active {
+            font-weight: bold;
+        }
+        .content {
+            flex: 1;
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .card {
+            background-color: white;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        .card-header {
+            background-color: #e8eaf6;
+            padding: 15px;
+            border-bottom: 1px solid #ddd;
+        }
+        .card-header h2 {
+            margin: 0;
+            font-size: 18px;
+            color: #1a237e;
+        }
+        .card-body {
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            font-family: inherit;
+        }
+        .btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background-color: #1a237e;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #283593;
+        }
+        .btn-secondary {
+            background-color: #757575;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background-color: #616161;
+        }
+        .btn-success {
+            background-color: #4caf50;
+            color: white;
+        }
+        .btn-success:hover {
+            background-color: #388e3c;
+        }
+        .btn-danger {
+            background-color: #f44336;
+            color: white;
+        }
+        .btn-danger:hover {
+            background-color: #d32f2f;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #e8eaf6;
+            color: #1a237e;
+            font-weight: 500;
+        }
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            text-align: center;
+        }
+        .badge-success {
+            background-color: #e8f5e9;
+            color: #388e3c;
+        }
+        .badge-danger {
+            background-color: #ffebee;
+            color: #d32f2f;
+        }
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+        .tab {
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+        .tab.active {
+            border-bottom: 3px solid #1a237e;
+            color: #1a237e;
+            font-weight: 500;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .date-selector {
+            margin-bottom: 20px;
+        }
+        .date-selector label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        .date-picker-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .date-picker {
+            flex: 1;
+        }
+        .date-range {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .status-toggle {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .status-toggle .btn {
+            flex: 1;
+        }
+        .calendar-preview {
+            margin-top: 30px;
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .calendar-preview h3 {
+            margin-top: 0;
+            color: #1a237e;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+        }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+        }
+        .calendar-grid-header {
+            text-align: center;
+            font-weight: 500;
+            color: #1a237e;
+            padding: 10px 0;
+        }
+        .calendar-day {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+        .calendar-day.available {
+            background-color: #e8f5e9;
+        }
+        .calendar-day.unavailable {
+            background-color: #ffebee;
+        }
+        .calendar-day.other-month {
+            background-color: #f5f5f5;
+            color: #aaa;
+        }
+        .alert {
+            padding: 12px 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .alert-success {
+            background-color: #e8f5e9;
+            color: #388e3c;
+            border: 1px solid #c8e6c9;
+        }
+        .alert-danger {
+            background-color: #ffebee;
+            color: #d32f2f;
+            border: 1px solid #ffcdd2;
+        }
+        .price-input {
+            display: flex;
+            align-items: center;
+        }
+        .price-input span {
+            margin-right: 5px;
+        }
+        .floating-save {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 100;
+        }
+        .floating-save .btn {
+            padding: 15px 25px;
+            font-size: 16px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+        }
+        .export-import {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>ระบบจัดการห้องพักโรงแรมเขาใหญ่แฟนตาซีรีสอร์ท</h1>
+        </div>
+    </header>
+    
+    <nav>
+        <div class="container">
+            <a href="#" class="active">จัดการห้องพัก</a>
+            <a href="#">การจอง</a>
+            <a href="#">รายงาน</a>
+            <a href="#">ตั้งค่า</a>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="main-content">
+            <div class="sidebar">
+                <ul>
+                    <li><a href="#" class="active">ราคาและสถานะห้องพัก</a></li>
+                    <li><a href="#">ประเภทห้องพัก</a></li>
+                    <li><a href="#">โปรโมชัน</a></li>
+                    <li><a href="#">ช่วงเทศกาล</a></li>
+                    <li><a href="#">ข้อมูลโรงแรม</a></li>
+                </ul>
+            </div>
+            
+            <div class="content">
+                <h2>จัดการราคาและสถานะห้องพัก</h2>
+                
+                <div class="tabs">
+                    <div class="tab active" data-tab="prices">ราคาห้องพัก</div>
+                    <div class="tab" data-tab="availability">สถานะห้องพัก</div>
+                </div>
+                
+                <!-- แท็บราคาห้องพัก -->
+                <div class="tab-content active" id="prices-tab">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>ตั้งค่าราคาห้องพัก</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label for="room-type">เลือกประเภทห้องพัก</label>
+                                <select id="room-type">
+                                    <option value="standard">Dome Junior</option>
+                                    <option value="deluxe">Domr Triple</option>
+                                    <option value="suite">Duplex Villa</option>
+                                    <option value="family">Family Deluxe</option>
+                                    <option value="poolview">Family Suite</option>
+                                    <option value="presidential">Pool Villa</option>
+                                </select>
+                            </div>
+                            
+                            <div class="card">
+                                <div class="card-header">
+                                    <h2>ราคาปกติ</h2>
+                                </div>
+                                <div class="card-body">
+                                    <div class="form-group">
+                                        <label for="weekday-price">ราคาวันธรรมดา (จันทร์-พฤหัสบดี)</label>
+                                        <div class="price-input">
+                                            <span>฿</span>
+                                            <input type="number" id="weekday-price" value="1800" min="0">
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="weekend-price">ราคาวันหยุดสุดสัปดาห์ (ศุกร์-อาทิตย์)</label>
+                                        <div class="price-input">
+                                            <span>฿</span>
+                                            <input type="number" id="weekend-price" value="2200" min="0">
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="holiday-price">ราคาวันหยุดพิเศษ/เทศกาล</label>
+                                        <div class="price-input">
+                                            <span>฿</span>
+                                            <input type="number" id="holiday-price" value="2500" min="0">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="card">
+                                <div class="card-header">
+                                    <h2>วันหยุดพิเศษ/เทศกาล</h2>
+                                </div>
+                                <div class="card-body">
+                                    <div class="form-group">
+                                        <label>วันหยุดพิเศษที่กำหนดไว้</label>
+                                        <table>
+                                            <thead>
+                                                <tr>
+                                                    <th>ชื่อวันหยุด</th>
+                                                    <th>วันที่</th>
+                                                    <th>การจัดการ</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>วันปีใหม่</td>
+                                                    <td>1 มกราคม 2025</td>
+                                                    <td><button class="btn btn-danger btn-sm">ลบ</button></td>
+                                                </tr>
+                                                <tr>
+                                                    <td>วันมาฆบูชา</td>
+                                                    <td>10 กุมภาพันธ์ 2025</td>
+                                                    <td><button class="btn btn-danger btn-sm">ลบ</button></td>
+                                                </tr>
+                                                <tr>
+                                                    <td>วันสงกรานต์</td>
+                                                    <td>13-15 เมษายน 2025</td>
+                                                    <td><button class="btn btn-danger btn-sm">ลบ</button></td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label>เพิ่มวันหยุดพิเศษ</label>
+                                        <div class="date-picker-container">
+                                            <div class="date-picker">
+                                                <label for="holiday-name">ชื่อวันหยุด</label>
+                                                <input type="text" id="holiday-name" placeholder="ชื่อวันหยุด/เทศกาล">
+                                            </div>
+                                            <div class="date-picker">
+                                                <label for="holiday-start">วันที่เริ่มต้น</label>
+                                                <input type="date" id="holiday-start">
+                                            </div>
+                                            <div class="date-picker">
+                                                <label for="holiday-end">วันที่สิ้นสุด</label>
+                                                <input type="date" id="holiday-end">
+                                            </div>
+                                        </div>
+                                        <button class="btn btn-primary">เพิ่มวันหยุด</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- แท็บสถานะห้องพัก -->
+                <div class="tab-content" id="availability-tab">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>จัดการสถานะห้องพัก</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-info">
+                                ใช้ปฏิทินด้านล่างเพื่อปรับสถานะห้องพัก คลิกที่วันในปฏิทินเพื่อเปลี่ยนสถานะระหว่างว่างและไม่ว่าง
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="availability-room-type">เลือกประเภทห้องพัก</label>
+                                <select id="availability-room-type">
+                                    <option value="standard">ห้องมาตรฐาน</option>
+                                    <option value="deluxe">ห้องดีลักซ์</option>
+                                    <option value="suite">ห้องสวีท</option>
+                                    <option value="family">ห้องครอบครัว</option>
+                                    <option value="poolview">ห้องวิวสระน้ำ</option>
+                                    <option value="presidential">ห้องพรีเซิเดนเชียล</option>
+                                </select>
+                            </div>
+                            
+                            <div class="date-selector">
+                                <div class="date-range">
+                                    <div class="date-picker">
+                                        <label for="month-selector">เดือน</label>
+                                        <select id="month-selector">
+                                            <option value="0">มกราคม</option>
+                                            <option value="1">กุมภาพันธ์</option>
+                                            <option value="2">มีนาคม</option>
+                                            <option value="3" selected>เมษายน</option>
+                                            <option value="4">พฤษภาคม</option>
+                                            <option value="5">มิถุนายน</option>
+                                            <option value="6">กรกฎาคม</option>
+                                            <option value="7">สิงหาคม</option>
+                                            <option value="8">กันยายน</option>
+                                            <option value="9">ตุลาคม</option>
+                                            <option value="10">พฤศจิกายน</option>
+                                            <option value="11">ธันวาคม</option>
+                                        </select>
+                                    </div>
+                                    <div class="date-picker">
+                                        <label for="year-selector">ปี</label>
+                                        <select id="year-selector">
+                                            <option value="2025" selected>2025</option>
+                                            <option value="2026">2026</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="status-toggle">
+                                <button class="btn btn-success" id="set-available">ตั้งค่าให้ว่างทั้งหมด</button>
+                                <button class="btn btn-danger" id="set-unavailable">ตั้งค่าให้ไม่ว่างทั้งหมด</button>
+                            </div>
+                            
+                            <div class="calendar-preview">
+                                <h3>ปฏิทินสถานะห้องพัก - เมษายน 2025</h3>
+                                <div class="calendar-grid">
+                                    <div class="calendar-grid-header">อา</div>
+                                    <div class="calendar-grid-header">จ</div>
+                                    <div class="calendar-grid-header">อ</div>
+                                    <div class="calendar-grid-header">พ</div>
+                                    <div class="calendar-grid-header">พฤ</div>
+                                    <div class="calendar-grid-header">ศ</div>
+                                    <div class="calendar-grid-header">ส</div>
+                                    
+                                    <!-- วันที่ในเดือนอื่น -->
+                                    <div class="calendar-day other-month">30</div>
+                                    <div class="calendar-day other-month">31</div>
+                                    
+                                    <!-- วันที่ในเดือนนี้ -->
+                                    <div class="calendar-day available">1</div>
+                                    <div class="calendar-day available">2</div>
+                                    <div class="calendar-day available">3</div>
+                                    <div class="calendar-day available">4</div>
+                                    <div class="calendar-day available">5</div>
+                                    <div class="calendar-day available">6</div>
+                                    <div class="calendar-day available">7</div>
+                                    <div class="calendar-day available">8</div>
+                                    <div class="calendar-day available">9</div>
+                                    <div class="calendar-day available">10</div>
+                                    <div class="calendar-day available">11</div>
+                                    <div class="calendar-day available">12</div>
+                                    <div class="calendar-day unavailable">13</div>
+                                    <div class="calendar-day unavailable">14</div>
+                                    <div class="calendar-day unavailable">15</div>
+                                    <div class="calendar-day available">16</div>
+                                    <div class="calendar-day available">17</div>
+                                    <div class="calendar-day available">18</div>
+                                    <div class="calendar-day available">19</div>
+                                    <div class="calendar-day unavailable">20</div>
+                                    <div class="calendar-day unavailable">21</div>
+                                    <div class="calendar-day available">22</div>
+                                    <div class="calendar-day available">23</div>
+                                    <div class="calendar-day available">24</div>
+                                    <div class="calendar-day available">25</div>
+                                    <div class="calendar-day available">26</div>
+                                    <div class="calendar-day available">27</div>
+                                    <div class="calendar-day available">28</div>
+                                    <div class="calendar-day available">29</div>
+                                    <div class="calendar-day available">30</div>
+                                    
+                                    <!-- วันที่ในเดือนถัดไป -->
+                                    <div class="calendar-day other-month">1</div>
+                                    <div class="calendar-day other-month">2</div>
+                                    <div class="calendar-day other-month">3</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="floating-save">
+                    <button class="btn btn-primary" id="save-changes">บันทึกการเปลี่ยนแปลง</button>
+                </div>
+                
+                <div class="export-import">
+                    <h3>สำรอง/นำเข้าข้อมูล</h3>
+                    <button class="btn btn-secondary">ส่งออกข้อมูล</button>
+                    <button class="btn btn-secondary">นำเข้าข้อมูล</button>
+                </div>
+            </div>
+        </div>
+    </div>
+<script>
+        // ฟังก์ชันบันทึกข้อมูลไปยังไฟล์ JSON (จำลอง)
+        function saveDataToJSON() {
+            // ในระบบจริง จะส่งข้อมูลไปยัง API เพื่อบันทึกลงฐานข้อมูล
+            const jsonData = JSON.stringify(roomPrices);
+            
+            // จำลองการบันทึก (ในระบบจริงจะใช้ fetch หรือ AJAX)
+            console.log('บันทึกข้อมูล:', jsonData);
+            
+            // สร้าง URL สำหรับดาวน์โหลดไฟล์ JSON
+            const blob = new Blob([jsonData], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            // สร้างลิงก์ดาวน์โหลดและคลิกโดยอัตโนมัติ
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'hotel-data.json';
+            a.click();
+            
+            // ล้าง URL
+            URL.revokeObjectURL(url);
+            
+            return true;
+        }
+        
+        // ปุ่มบันทึกการเปลี่ยนแปลง
+        document.getElementById('save-changes').addEventListener('click', function() {
+            // บันทึกข้อมูลราคา
+            const roomType = document.getElementById('room-type').value;
+            roomPrices[roomType].weekday = parseInt(document.getElementById('weekday-price').value);
+            roomPrices[roomType].weekend = parseInt(document.getElementById('weekend-price').value);
+            roomPrices[roomType].holiday = parseInt(document.getElementById('holiday-price').value);
+            
+            // บันทึกข้อมูลไปยังไฟล์หรือฐานข้อมูล
+            if (saveDataToJSON()) {
+                alert('บันทึกข้อมูลเรียบร้อยแล้ว');
+                
+                // อัพเดทข้อมูลในปฏิทิน
+                updateCalendar();
+                
+                // อัพเดทข้อมูลในปฏิทินราคาห้องพักสำหรับลูกค้า (จำลอง)
+                console.log('อัพเดทข้อมูลในปฏิทินราคาห้องพักสำหรับลูกค้า');
+            }
+        });
+        
+        // ฟังก์ชันเปลี่ยนปฏิทิน
+        document.getElementById('month-selector').addEventListener('change', updateCalendar);
+        document.getElementById('year-selector').addEventListener('change', updateCalendar);
+        document.getElementById('availability-room-type').addEventListener('change', updateCalendar);
+        
+        // ฟังก์ชันอัพเดทปฏิทิน
+        function updateCalendar() {
+            const month = parseInt(document.getElementById('month-selector').value);
+            const year = parseInt(document.getElementById('year-selector').value);
+            const roomType = document.getElementById('availability-room-type').value;
+            generateCalendar(year, month, roomType);
+        }
+        
+        // สร้างปฏิทิน
+        function generateCalendar(year, month, roomType) {
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const daysInMonth = lastDay.getDate();
+            const startDay = firstDay.getDay();
+            
+            const monthNames = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+            
+            document.querySelector('.calendar-preview h3').textContent = `ปฏิทินสถานะห้องพัก - ${monthNames[month]} ${year}`;
+            
+            let calendarHTML = `
+                <div class="calendar-grid-header">อา</div>
+                <div class="calendar-grid-header">จ</div>
+                <div class="calendar-grid-header">อ</div>
+                <div class="calendar-grid-header">พ</div>
+                <div class="calendar-grid-header">พฤ</div>
+                <div class="calendar-grid-header">ศ</div>
+                <div class="calendar-grid-header">ส</div>
+            `;
+            
+            // วันจากเดือนก่อน
+            const prevMonthDays = startDay;
+            const prevMonth = month === 0 ? 11 : month - 1;
+            const prevMonthYear = month === 0 ? year - 1 : year;
+            const prevMonthDaysTotal = new Date(prevMonthYear, prevMonth + 1, 0).getDate();
+            
+            // วันในเดือนก่อน
+            for (let i = 0; i < prevMonthDays; i++) {
+                const day = prevMonthDaysTotal - prevMonthDays + i + 1;
+                calendarHTML += `<div class="calendar-day other-month">${day}</div>`;
+            }
+            
+            // วันในเดือนปัจจุบัน
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const isUnavailable = roomPrices[roomType].availability.unavailableDates.includes(dateString);
+                const statusClass = isUnavailable ? 'unavailable' : 'available';
+                
+                calendarHTML += `<div class="calendar-day ${statusClass}" data-date="${dateString}">${day}</div>`;
+            }
+            
+            // วันในเดือนถัดไป
+            const daysAfter = 42 - (prevMonthDays + daysInMonth);
+            for (let day = 1; day <= daysAfter; day++) {
+                calendarHTML += `<div class="calendar-day other-month">${day}</div>`;
+            }
+            
+            document.querySelector('.calendar-preview .calendar-grid').innerHTML = calendarHTML;
+            
+            // เพิ่ม event listener สำหรับการคลิกเปลี่ยนสถานะ
+            document.querySelectorAll('.calendar-day:not(.other-month)').forEach(day => {
+                day.addEventListener('click', function() {
+                    // สลับสถานะระหว่างว่างและไม่ว่าง
+                    if (this.classList.contains('available')) {
+                        this.classList.remove('available');
+                        this.classList.add('unavailable');
+                        
+                        // เพิ่มวันที่ลงในรายการวันที่ไม่ว่าง
+                        const dateString = this.getAttribute('data-date');
+                        if (!roomPrices[roomType].availability.unavailableDates.includes(dateString)) {
+                            roomPrices[roomType].availability.unavailableDates.push(dateString);
+                        }
+                    } else {
+                        this.classList.remove('unavailable');
+                        this.classList.add('available');
+                        
+                        // ลบวันที่ออกจากรายการวันที่ไม่ว่าง
+                        const dateString = this.getAttribute('data-date');
+                        const index = roomPrices[roomType].availability.unavailableDates.indexOf(dateString);
+                        if (index > -1) {
+                            roomPrices[roomType].availability.unavailableDates.splice(index, 1);
+                        }
+                    }
+                });
+            });
+        }
+        
+        // โหลดข้อมูลราคาเมื่อเลือกประเภทห้อง
+        document.getElementById('room-type').addEventListener('change', function() {
+            const roomType = this.value;
+            document.getElementById('weekday-price').value = roomPrices[roomType].weekday;
+            document.getElementById('weekend-price').value = roomPrices[roomType].weekend;
+            document.getElementById('holiday-price').value = roomPrices[roomType].holiday;
+        });
+        
+        // ปุ่มตั้งค่าให้ห้องว่างทั้งหมด
+        document.getElementById('set-available').addEventListener('click', function() {
+            const roomType = document.getElementById('availability-room-type').value;
+            const month = parseInt(document.getElementById('month-selector').value);
+            const year = parseInt(document.getElementById('year-selector').value);
+            
+            // ล้างข้อมูลวันที่ไม่ว่างในเดือนที่เลือก
+            roomPrices[roomType].availability.unavailableDates = roomPrices[roomType].availability.unavailableDates.filter(date => {
+                const dateParts = date.split('-');
+                const dateMonth = parseInt(dateParts[1]) - 1;
+                const dateYear = parseInt(dateParts[0]);
+                return dateMonth !== month || dateYear !== year;
+            });
+            
+            // อัพเดทปฏิทิน
+            updateCalendar();
+            
+            // แสดงข้อความแจ้งเตือน
+            alert('ตั้งค่าให้ห้องว่างทั้งหมดในเดือนที่เลือกเรียบร้อยแล้ว');
+        });
+        
+        // ปุ่มตั้งค่าให้ห้องไม่ว่างทั้งหมด
+        document.getElementById('set-unavailable').addEventListener('click', function() {
+            const roomType = document.getElementById('availability-room-type').value;
+            const month = parseInt(document.getElementById('month-selector').value);
+            const year = parseInt(document.getElementById('year-selector').value);
+            
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            
+            // เพิ่มวันที่ไม่ว่างทุกวันในเดือนที่เลือก
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                
+                if (!roomPrices[roomType].availability.unavailableDates.includes(dateString)) {
+                    roomPrices[roomType].availability.unavailableDates.push(dateString);
+                }
+            }
+            
+            // อัพเดทปฏิทิน
+            updateCalendar();
+            
+            // แสดงข้อความแจ้งเตือน
+            alert('ตั้งค่าให้ห้องไม่ว่างทั้งหมดในเดือนที่เลือกเรียบร้อยแล้ว');
+        });
+        
+        // สลับแท็บ
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                // ลบ active จากทุก tab
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                // เพิ่ม active ให้ tab ที่คลิก
+                this.classList.add('active');
+                const tabId = this.getAttribute('data-tab') + '-tab';
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+        
+        // โหลดปฏิทินเมื่อโหลดหน้า
+        document.addEventListener('DOMContentLoaded', function() {
+            // ตั้งค่าวันที่ปัจจุบัน
+            const currentDate = new Date();
+            const currentMonth = currentDate.getMonth();
+            const currentYear = currentDate.getFullYear();
+            
+            // กำหนดค่าเริ่มต้นให้ select
+            document.getElementById('month-selector').value = currentMonth;
+            document.getElementById('year-selector').value = currentYear;
+            
+            // โหลดปฏิทิน
+            const roomType = document.getElementById('availability-room-type').value;
+            generateCalendar(currentYear, currentMonth, roomType);
+        });
+        
+        // ข้อมูลตั้งต้น
+        const roomPrices = {
+            standard: {
+                weekday: 1800,
+                weekend: 2200,
+                holiday: 2500,
+                availability: {
+                    unavailableDates: [
+                        '2025-03-15', '2025-03-16', '2025-03-17',
+                        '2025-03-22', '2025-03-23',
+                        '2025-04-13', '2025-04-14', '2025-04-15'
+                    ]
+                }
+            },
+            deluxe: {
+                weekday: 2500,
+                weekend: 3000,
+                holiday: 3500,
+                availability: {
+                    unavailableDates: [
+                        '2025-03-18', '2025-03-19', '2025-03-20',
+                        '2025-03-28', '2025-03-29', '2025-03-30',
+                        '2025-04-10', '2025-04-11', '2025-04-12'
+                    ]
+                }
+            },
+            suite: {
+                weekday: 3800,
+                weekend: 4500,
+                holiday: 5200,
+                availability: {
+                    unavailableDates: [
+                        '2025-03-21', '2025-03-22',
+                        '2025-04-01', '2025-04-02', '2025-04-03'
+                    ]
+                }
+            },
+            family: {
+                weekday: 4200,
+                weekend: 4800,
+                holiday: 5500,
+                availability: {
+                    unavailableDates: [
+                        '2025-03-25', '2025-03-26',
+                        '2025-04-05', '2025-04-06'
+                    ]
+                }
+            },
+            poolview: {
+                weekday: 2800,
+                weekend: 3300,
+                holiday: 3800,
+                availability: {
+                    unavailableDates: [
+                        '2025-03-10', '2025-03-11', '2025-03-12',
+                        '2025-04-08', '2025-04-09'
+                    ]
+                }
+            },
+            presidential: {
+                weekday: 8000,
+                weekend: 9500,
+                holiday: 12000,
+                availability: {
+                    unavailableDates: [
+                        '2025-03-14', '2025-03-15', '2025-03-16',
+                        '2025-04-19', '2025-04-20'
+                    ]
+                }
+            }
+        };
+    </script>
+</body>
+</html>

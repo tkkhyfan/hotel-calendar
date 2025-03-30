@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ปฏิทินราคาห้องพักโรงแรมเขาใหญ่แฟนตาซีรีสอร์ท</title>
+    <style>
+        body {
+            font-family: 'Prompt', 'Sarabun', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #1a237e;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .month-selector {
+            display: flex;
+            align-items: center;
+        }
+        .month-selector button {
+            background-color: #1a237e;
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            font-size: 20px;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+        .month-selector span {
+            margin: 0 15px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .room-selector {
+            margin: 10px 0;
+        }
+        .room-selector select {
+            padding: 8px 15px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .calendar {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }
+        .calendar th {
+            background-color: #1a237e;
+            color: white;
+            padding: 12px;
+            text-align: center;
+        }
+        .calendar td {
+            border: 1px solid #ddd;
+            padding: 15px;
+            text-align: center;
+            vertical-align: top;
+            height: 70px;
+            width: 14.28%;
+        }
+        .calendar .day-number {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .calendar .price {
+            color: #d81b60;
+            font-weight: bold;
+        }
+        .calendar .room-status {
+            margin-top: 5px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+            display: inline-block;
+        }
+        .calendar .available {
+            background-color: #4caf50;
+            color: white;
+        }
+        .calendar .unavailable {
+            background-color: #f44336;
+            color: white;
+        }
+        .calendar .other-month {
+            background-color: #f5f5f5;
+            color: #999;
+        }
+        .legend {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+        .legend h3 {
+            margin-top: 0;
+            color: #1a237e;
+        }
+        .legend-item {
+            display: flex;
+            margin-bottom: 8px;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            border-radius: 4px;
+        }
+        .room-type-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .room-type-btn {
+            padding: 8px 15px;
+            border: 1px solid #1a237e;
+            background-color: white;
+            color: #1a237e;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+        .room-type-btn.active {
+            background-color: #1a237e;
+            color: white;
+        }
+        .special-note {
+            font-style: italic;
+            margin-top: 20px;
+            color: #555;
+        }
+        .status-indicator {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .status-success {
+            background-color: #e8f5e9;
+            color: #388e3c;
+            border: 1px solid #c8e6c9;
+        }
+        .status-error {
+            background-color: #ffebee;
+            color: #d32f2f;
+            border: 1px solid #ffcdd2;
+        }
+        .status-loading {
+            background-color: #e3f2fd;
+            color: #1565c0;
+            border: 1px solid #bbdefb;
+        }
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+            }
+            .month-selector, .room-selector {
+                margin-bottom: 15px;
+            }
+            .calendar td {
+                padding: 10px 5px;
+                font-size: 14px;
+                height: 60px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ปฏิทินราคาห้องพักโรงแรมเขาใหญ่แฟนตาซีรีสอร์ท</h1>
+        
+        <div id="status-message"></div>
+        
+        <div class="controls">
+            <div class="month-selector">
+                <button id="prev-month">&lt;</button>
+                <span id="current-month">มีนาคม 2025</span>
+                <button id="next-month">&gt;</button>
+            </div>
+        </div>
+
+        <div class="room-type-list">
+            <button class="room-type-btn active" data-room-type="standard">Dome Junior 2ท่าน</button>
+            <button class="room-type-btn" data-room-type="deluxe">Domr Triple 3ท่าน</button>
+            <button class="room-type-btn" data-room-type="suite">Duplex Villa 3ท่าน</button>
+            <button class="room-type-btn" data-room-type="family">Family Deluxe 4ท่าน</button>
+            <button class="room-type-btn" data-room-type="poolview">Family Suite 6ท่าน</button>
+            <button class="room-type-btn" data-room-type="presidential">Pool Villa 8ท่าน</button>
+        </div>
+        
+        <div id="calendar-container">
+            <table class="calendar">
+                <thead>
+                    <tr>
+                        <th>อาทิตย์</th>
+                        <th>จันทร์</th>
+                        <th>อังคาร</th>
+                        <th>พุธ</th>
+                        <th>พฤหัสบดี</th>
+                        <th>ศุกร์</th>
+                        <th>เสาร์</th>
+                    </tr>
+                </thead>
+                <tbody id="calendar-body">
+                    <!-- Calendar cells will be populated here by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="legend">
+            <h3>รายละเอียดห้องพัก</h3>
+            <div id="room-details">
+                <p><strong>Dome Junior 2ท่าน:</strong> ห้องพักขนาด 30 ตร.ม. พร้อมเตียงคิงไซส์หรือเตียงคู่ เหมาะสำหรับผู้เข้าพัก 2 ท่าน</p>
+                <p><strong>Domr Triple 3ท่าน:</strong> ห้องพักขนาด 40 ตร.ม. พร้อมพื้นที่นั่งเล่น เหมาะสำหรับผู้เข้าพัก 2 ท่าน</p>
+                <p><strong>Duplex Villa 3ท่าน:</strong> ห้องพักขนาด 55 ตร.ม. แยกส่วนห้องนั่งเล่น เหมาะสำหรับผู้เข้าพัก 2 ท่าน</p>
+                <p><strong>Family Deluxe 4ท่าน:</strong> ห้องพักขนาด 60 ตร.ม. มี 2 ห้องนอน เหมาะสำหรับผู้เข้าพัก 4 ท่าน</p>
+                <p><strong>Family Suite 6ท่าน:</strong> ห้องพักขนาด 35 ตร.ม. วิวสระว่ายน้ำ เหมาะสำหรับผู้เข้าพัก 2 ท่าน</p>
+                <p><strong>Pool Villa 8ท่าน:</strong> ห้องพักขนาด 90 ตร.ม. พร้อมจากุซซี่ส่วนตัว เหมาะสำหรับผู้เข้าพัก 2 ท่าน</p>
+            </div>
+            
+            <h3>คำอธิบายสถานะห้องพัก</h3>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #4caf50;"></div>
+                <div>ว่าง - สามารถจองห้องพักได้</div>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #f44336;"></div>
+                <div>ไม่ว่าง - ห้องพักเต็มในวันที่เลือก</div>
+            </div>
+        </div>
+        
+        <div class="special-note">
+            หมายเหตุ: ราคาห้องพักอาจมีการเปลี่ยนแปลงตามฤดูกาลท่องเที่ยวและช่วงเทศกาล กรุณาติดต่อโรงแรมโดยตรงเพื่อยืนยันราคาและทำการจอง
+        </div>
+    </div>
+
+    <script>
+        // ฟังก์ชันสำหรับโหลดข้อมูลจากไฟล์ JSON
+        async function loadRoomData() {
+            showStatus('กำลังโหลดข้อมูลห้องพัก...', 'loading');
+            
+            try {
+                const response = await fetch('hotel-data.json');
+                
+                if (!response.ok) {
+                    throw new Error(`ไม่สามารถโหลดข้อมูลได้ (HTTP status: ${response.status})`);
+                }
+                
+                const data = await response.json();
+                showStatus('โหลดข้อมูลห้องพักสำเร็จ', 'success');
+                
+                // เช็คว่าข้อมูลมีโครงสร้างที่ถูกต้องหรือไม่
+                if (!validateRoomData(data)) {
+                    throw new Error('โครงสร้างข้อมูลไม่ถูกต้อง');
+                }
+                
+                return data;
+            } catch (error) {
+                console.error('เกิดข้อผิดพลาดในการโหลดข้อมูล:', error);
+                showStatus('ไม่สามารถโหลดข้อมูลได้: ' + error.message + ' - กำลังใช้ข้อมูลสำรอง', 'error');
+                return null;
+            }
+        }
+
+        // ฟังก์ชันตรวจสอบความถูกต้องของข้อมูล
+        function validateRoomData(data) {
+            // ตรวจสอบว่ามีข้อมูลห้องพักที่จำเป็นหรือไม่
+            const requiredRoomTypes = ['standard', 'deluxe', 'suite', 'family', 'poolview', 'presidential'];
+            const requiredFields = ['weekday', 'weekend', 'holiday', 'availability'];
+            
+            for (const roomType of requiredRoomTypes) {
+                if (!data[roomType]) {
+                    console.error(`ไม่พบข้อมูลห้องพักประเภท "${roomType}"`);
+                    return false;
+                }
+                
+                for (const field of requiredFields) {
+                    if (data[roomType][field] === undefined) {
+                        console.error(`ไม่พบข้อมูล "${field}" ในห้องพักประเภท "${roomType}"`);
+                        return false;
+                    }
+                }
+                
+                // ตรวจสอบว่ามีฟิลด์ unavailableDates หรือไม่
+                if (!data[roomType].availability.unavailableDates) {
+                    console.error(`ไม่พบข้อมูล "unavailableDates" ในห้องพักประเภท "${roomType}"`);
+                    return false;
+                }
+            }
+            
+            return true;
+        }
+
+        // ฟังก์ชันแสดงสถานะการโหลดข้อมูล
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('status-message');
+            statusDiv.textContent = message;
+            statusDiv.className = 'status-indicator';
+            
+            switch (type) {
+                case 'success':
+                    statusDiv.classList.add('status-success');
+                    // ซ่อนข้อความหลังจาก 3 วินาที
+                    setTimeout(() => {
+                        statusDiv.textContent = '';
+                        statusDiv.className = '';
+                    }, 3000);
+                    break;
+                case 'error':
+                    statusDiv.classList.add('status-error');
+                    break;
+                case 'loading':
+                    statusDiv.classList.add('status-loading');
+                    break;
+            }
+        }
+
+        // ข้อมูลราคาห้องพัก (ข้อมูลสำรองกรณีไม่สามารถโหลดจาก JSON ได้)
+        let roomPrices = {
+            standard: {
+                weekday: 1800,
+                weekend: 2200,
+                holiday: 2500,
+                availability: {
+                    unavailableDates: [
+                        '2025-03-15', '2025-03-16', '2025-03-17',
+                        '2025-03-22', '2025-03-23',
+                        '2025-04-13', '2025-04-14', '2025-04-15'
+                    ]
+                }
+            },
+            deluxe: {
+                weekday: 2500,
+                weekend: 3000,
+                holiday: 3500,
+                availability: {
+                    unavailableDates: [
+                        '2025-03-18', '2025-03-19', '2025-03-20',
+                        '2025-03-28', '2025-03-29', '2025-03-30',
+                        '2025-04-10', '2025-04-11', '2025-04-12'
+                    ]
+                }
+            },
+            suite: {
+                weekday: 3800,
+                weekend: 4500,
+                holiday: 5200,
+                availability: {
+                    unavailableDates: [
+                        '2025-03-21', '2025-03-22',
+                        '2025-04-01', '2025-04-02', '2025-04-03'
+                    ]
+                }
+            },
+            family: {
+                weekday: 4200,
+                weekend: 4800,
+                holiday: 5500,
+                availability: {
+                    unavailableDates: [
+                        '2025-03-25', '2025-03-26',
+                        '2025-04-05', '2025-04-06'
+                    ]
+                }
+            },
+            poolview: {
+                weekday: 2800,
+                weekend: 3300,
+                holiday: 3800,
+                availability: {
+                    unavailableDates: [
+                        '2025-03-10', '2025-03-11', '2025-03-12',
+                        '2025-04-08', '2025-04-09'
+                    ]
+                }
+            },
+            presidential: {
+                weekday: 8000,
+                weekend: 9500,
+                holiday: 12000,
+                availability: {
+                    unavailableDates: [
+                        '2025-03-14', '2025-03-15', '2025-03-16',
+                        '2025-04-19', '2025-04-20'
+                    ]
+                }
+            }
+        };
+
+        // วันหยุดพิเศษ (เทศกาล)
+        const holidays = [
+            '2025-01-01', // วันปีใหม่
+            '2025-02-10', // วันมาฆบูชา
+            '2025-04-06', // วันจักรี
+            '2025-04-13', '2025-04-14', '2025-04-15', // วันสงกรานต์
+            '2025-05-01', // วันแรงงาน
+            '2025-05-04', // วันฉัตรมงคล
+            '2025-05-22', // วันวิสาขบูชา
+            '2025-06-03', // วันเฉลิมพระชนมพรรษาสมเด็จพระราชินี
+            '2025-07-28', // วันเฉลิมพระชนมพรรษา ร.10
+            '2025-08-12', // วันแม่แห่งชาติ
+            '2025-10-13', // วันคล้ายวันสวรรคต ร.9
+            '2025-10-23', // วันปิยมหาราช
+            '2025-12-05', // วันพ่อแห่งชาติ
+            '2025-12-10', // วันรัฐธรรมนูญ
+            '2025-12-24', '2025-12-25', // คริสต์มาส
+            '2025-12-31' // วันสิ้นปี
+        ];
+
+        let currentDate = new Date();
+        let currentRoomType = 'standard';
+
+        // ฟังก์ชันสำหรับการแสดงปฏิทิน
+        function renderCalendar() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            
+            // ตั้งค่าวันที่แสดงในส่วนหัว
+            const monthNames = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+            document.getElementById('current-month').textContent = `${monthNames[month]} ${year}`;
+            
+            // สร้างวันแรกของเดือน
+            const firstDay = new Date(year, month, 1);
+            // หาวันสุดท้ายของเดือน
+            const lastDay = new Date(year, month + 1, 0);
+            
+            const startDay = firstDay.getDay(); // วันในสัปดาห์ของวันแรกของเดือน (0-6)
+            const daysInMonth = lastDay.getDate(); // จำนวนวันในเดือน
+            
+            // สร้างตารางปฏิทิน
+            let calendarHtml = '';
+            let dayCount = 1;
+            
+            // สร้างแถวของปฏิทิน
+            for (let i = 0; i < 6; i++) {
+                if (dayCount > daysInMonth) break;
+                
+                calendarHtml += '<tr>';
+                
+                // สร้างเซลล์สำหรับแต่ละวัน
+                for (let j = 0; j < 7; j++) {
+                    if ((i === 0 && j < startDay) || dayCount > daysInMonth) {
+                        // วันก่อนเริ่มเดือนหรือหลังสิ้นสุดเดือน
+                        calendarHtml += '<td class="other-month"></td>';
+                    } else {
+                        // หาวันในสัปดาห์
+                        const dayOfWeek = j;
+                        // สร้างวันที่สำหรับตรวจสอบว่าเป็นวันหยุดหรือไม่
+                        const dateString = `${year}-${(month + 1).toString().padStart(2, '0')}-${dayCount.toString().padStart(2, '0')}`;
+                        
+                        // กำหนดราคาตามประเภทของวัน (วันธรรมดา, วันหยุดสุดสัปดาห์, วันหยุดพิเศษ)
+                        let priceType = 'weekday';
+                        if (dayOfWeek === 0 || dayOfWeek === 6) {
+                            priceType = 'weekend';
+                        }
+                        if (holidays.includes(dateString)) {
+                            priceType = 'holiday';
+                        }
+                        
+                        // ดึงราคาจากข้อมูล
+                        const price = roomPrices[currentRoomType][priceType];
+                        
+                        // ตรวจสอบสถานะว่างของห้อง
+                        const isAvailable = !roomPrices[currentRoomType].availability.unavailableDates.includes(dateString);
+                        const statusClass = isAvailable ? 'available' : 'unavailable';
+                        const statusText = isAvailable ? 'ว่าง' : 'ไม่ว่าง';
+                        
+                        // สร้าง HTML สำหรับเซลล์วัน
+                        calendarHtml += `
+                            <td>
+                                <div class="day-number">${dayCount}</div>
+                                <div class="price">฿${price.toLocaleString()}</div>
+                                <div class="room-status ${statusClass}">${statusText}</div>
+                            </td>
+                        `;
+                        
+                        dayCount++;
+                    }
+                }
+                
+                calendarHtml += '</tr>';
+            }
+            
+            document.getElementById('calendar-body').innerHTML = calendarHtml;
+        }
+
+        // ฟังก์ชันเปลี่ยนเดือน
+        document.getElementById('prev-month').addEventListener('click', function() {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            renderCalendar();
+        });
+
+        document.getElementById('next-month').addEventListener('click', function() {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            renderCalendar();
+        });
+
+        // ฟังก์ชันเปลี่ยนประเภทห้อง
+        document.querySelectorAll('.room-type-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                // ลบคลาส active จากทุกปุ่ม
+                document.querySelectorAll('.room-type-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                
+                // เพิ่มคลาส active ให้ปุ่มที่ถูกคลิก
+                this.classList.add('active');
+                
+                // อัปเดตประเภทห้องปัจจุบัน
+                currentRoomType = this.getAttribute('data-room-type');
+                
+                // แสดงปฏิทินใหม่
+                renderCalendar();
+            });
+        });
+
+        // เริ่มต้นการทำงาน
+        document.addEventListener('DOMContentLoaded', async function() {
+            // โหลดข้อมูลจากไฟล์ JSON
+            const data = await loadRoomData();
+            if (data) {
+                // แทนที่ข้อมูลด้วยข้อมูลจากไฟล์ JSON
+                roomPrices = data;
+            }
+            
+            // แสดงปฏิทิน
+            renderCalendar();
+        });
+    </script>
+</body>
+</html>

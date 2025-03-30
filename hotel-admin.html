@@ -872,6 +872,208 @@
                 }
             }
         };
+        // ฟังก์ชันตรวจสอบความถูกต้องของข้อมูลที่นำเข้า
+function validateImportedData(data) {
+    // ตรวจสอบว่ามีข้อมูลห้องพักที่จำเป็นหรือไม่
+    const requiredRoomTypes = ['standard', 'deluxe', 'suite', 'family', 'poolview', 'presidential'];
+    const requiredFields = ['weekday', 'weekend', 'holiday', 'availability'];
+    
+    // ตรวจสอบว่าข้อมูลเป็น object หรือไม่
+    if (!data || typeof data !== 'object') {
+        console.error('ข้อมูลไม่ใช่ object');
+        return false;
+    }
+    
+    // ตรวจสอบประเภทห้อง
+    for (const roomType of requiredRoomTypes) {
+        if (!data[roomType]) {
+            console.error(`ไม่พบข้อมูลห้องพักประเภท "${roomType}"`);
+            return false;
+        }
+        
+        // ตรวจสอบฟิลด์ที่จำเป็น
+        for (const field of requiredFields) {
+            if (data[roomType][field] === undefined) {
+                console.error(`ไม่พบข้อมูล "${field}" ในห้องพักประเภท "${roomType}"`);
+                return false;
+            }
+        }
+        
+        // ตรวจสอบฟิลด์ unavailableDates
+        if (!data[roomType].availability.unavailableDates) {
+            console.error(`ไม่พบข้อมูล "unavailableDates" ในห้องพักประเภท "${roomType}"`);
+            return false;
+        }
+        
+        // ตรวจสอบประเภทข้อมูล
+        if (typeof data[roomType].weekday !== 'number' || 
+            typeof data[roomType].weekend !== 'number' || 
+            typeof data[roomType].holiday !== 'number') {
+            console.error(`ข้อมูลราคาในห้องพักประเภท "${roomType}" ไม่ใช่ตัวเลข`);
+            return false;
+        }
+        
+        if (!Array.isArray(data[roomType].availability.unavailableDates)) {
+            console.error(`ข้อมูล "unavailableDates" ในห้องพักประเภท "${roomType}" ไม่ใช่อาร์เรย์`);
+            return false;
+        }
+    }
+    
+    return true;
+}
+
+// ฟังก์ชันโหลดข้อมูลปัจจุบันจากไฟล์ JSON
+async function loadCurrentData() {
+    try {
+        // แสดงข้อความกำลังโหลด
+        showLoading('กำลังโหลดข้อมูลจากไฟล์ JSON...');
+        
+        // ดึงข้อมูลจากไฟล์ JSON
+        const response = await fetch('hotel-data.json?t=' + new Date().getTime());
+        if (!response.ok) {
+            throw new Error(`ไม่สามารถโหลดไฟล์ได้ (HTTP status: ${response.status})`);
+        }
+        
+        // แปลงข้อมูลเป็น JSON
+        const data = await response.json();
+        
+        // ตรวจสอบความถูกต้องของข้อมูล
+        if (validateImportedData(data)) {
+            // อัพเดตข้อมูลในระบบ - แทนที่จะเปลี่ยนตัวแปร roomPrices ทั้งหมด 
+            // เราจะอัพเดทค่าภายในแทน เพื่อหลีกเลี่ยงข้อผิดพลาด Assignment to constant variable
+            Object.keys(data).forEach(roomType => {
+                if (roomPrices[roomType]) {
+                    roomPrices[roomType].weekday = data[roomType].weekday;
+                    roomPrices[roomType].weekend = data[roomType].weekend;
+                    roomPrices[roomType].holiday = data[roomType].holiday;
+                    roomPrices[roomType].availability.unavailableDates = [...data[roomType].availability.unavailableDates];
+                }
+            });
+            
+            // อัพเดตการแสดงผล
+            const roomType = document.getElementById('room-type').value;
+            updateRoomPriceDisplay(roomType);
+            
+            // อัพเดตปฏิทิน
+            updateCalendar();
+            
+            // แสดงข้อความสำเร็จ
+            hideLoading();
+            showAlert('โหลดข้อมูลจากไฟล์ JSON สำเร็จ', 'success');
+            return true;
+        } else {
+            throw new Error('โครงสร้างข้อมูลไม่ถูกต้อง');
+        }
+    } catch (error) {
+        console.error('เกิดข้อผิดพลาดในการโหลดข้อมูล:', error);
+        hideLoading();
+        showAlert('ไม่สามารถโหลดข้อมูลได้: ' + error.message, 'error');
+        return false;
+    }
+}
+
+// ฟังก์ชันอัพเดตการแสดงผลราคา
+function updateRoomPriceDisplay(roomType) {
+    document.getElementById('weekday-price').value = roomPrices[roomType].weekday;
+    document.getElementById('weekend-price').value = roomPrices[roomType].weekend;
+    document.getElementById('holiday-price').value = roomPrices[roomType].holiday;
+}
+
+// ฟังก์ชันแสดงและซ่อนข้อความกำลังโหลด
+function showLoading(message) {
+    // ตรวจสอบว่ามี loading-indicator อยู่แล้วหรือไม่
+    let loadingDiv = document.getElementById('loading-indicator');
+    
+    // ถ้ายังไม่มี ให้สร้างใหม่
+    if (!loadingDiv) {
+        loadingDiv = document.createElement('div');
+        loadingDiv.id = 'loading-indicator';
+        loadingDiv.style.position = 'fixed';
+        loadingDiv.style.top = '0';
+        loadingDiv.style.left = '0';
+        loadingDiv.style.width = '100%';
+        loadingDiv.style.padding = '10px';
+        loadingDiv.style.backgroundColor = '#1a237e';
+        loadingDiv.style.color = 'white';
+        loadingDiv.style.textAlign = 'center';
+        loadingDiv.style.zIndex = '1000';
+        document.body.appendChild(loadingDiv);
+    }
+    
+    loadingDiv.textContent = message;
+    loadingDiv.style.display = 'block';
+}
+
+function hideLoading() {
+    const loadingDiv = document.getElementById('loading-indicator');
+    if (loadingDiv) {
+        loadingDiv.style.display = 'none';
+    }
+}
+
+// ฟังก์ชันแสดงข้อความแจ้งเตือน
+function showAlert(message, type) {
+    // ตรวจสอบว่ามี alert-message อยู่แล้วหรือไม่
+    let alertDiv = document.getElementById('alert-message');
+    
+    // ถ้ายังไม่มี ให้สร้างใหม่
+    if (!alertDiv) {
+        alertDiv = document.createElement('div');
+        alertDiv.id = 'alert-message';
+        alertDiv.style.position = 'fixed';
+        alertDiv.style.top = '10px';
+        alertDiv.style.right = '10px';
+        alertDiv.style.padding = '15px 20px';
+        alertDiv.style.borderRadius = '4px';
+        alertDiv.style.maxWidth = '300px';
+        alertDiv.style.boxShadow = '0 3px 10px rgba(0,0,0,0.2)';
+        alertDiv.style.zIndex = '1000';
+        document.body.appendChild(alertDiv);
+    }
+    
+    // กำหนดสีตามประเภทของข้อความ
+    if (type === 'success') {
+        alertDiv.style.backgroundColor = '#4caf50';
+        alertDiv.style.color = 'white';
+    } else if (type === 'error') {
+        alertDiv.style.backgroundColor = '#f44336';
+        alertDiv.style.color = 'white';
+    } else {
+        alertDiv.style.backgroundColor = '#2196f3';
+        alertDiv.style.color = 'white';
+    }
+    
+    alertDiv.textContent = message;
+    alertDiv.style.display = 'block';
+    
+    // ซ่อนข้อความหลังจาก 3 วินาที
+    setTimeout(() => {
+        alertDiv.style.display = 'none';
+    }, 3000);
+}
+
+// เพิ่มปุ่มโหลดข้อมูลปัจจุบัน
+function addLoadCurrentDataButton() {
+    // หาปุ่มนำเข้าข้อมูล
+    const importButton = document.querySelector('.export-import button:last-child');
+    
+    // สร้างปุ่มใหม่
+    const loadCurrentButton = document.createElement('button');
+    loadCurrentButton.className = 'btn btn-secondary';
+    loadCurrentButton.textContent = 'โหลดข้อมูลปัจจุบัน';
+    loadCurrentButton.style.marginLeft = '10px';
+    
+    // เพิ่ม event listener
+    loadCurrentButton.addEventListener('click', loadCurrentData);
+    
+    // แทรกปุ่มหลังปุ่มนำเข้าข้อมูล
+    importButton.parentNode.insertBefore(loadCurrentButton, importButton.nextSibling);
+}
+
+// เรียกใช้ฟังก์ชันเพิ่มปุ่มเมื่อโหลดหน้า
+document.addEventListener('DOMContentLoaded', function() {
+    addLoadCurrentDataButton();
+});
     </script>
 </body>
 </html>

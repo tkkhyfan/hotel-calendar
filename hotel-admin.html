@@ -1755,6 +1755,474 @@ document.addEventListener('DOMContentLoaded', function() {
     // เพิ่มปุ่ม GitHub
     addGitHubSaveButton();
 });
+// ตัวแปรวันหยุดพิเศษ (เทศกาล)
+const holidays = [
+    '2025-01-01', // วันปีใหม่
+    '2025-02-10', // วันมาฆบูชา
+    '2025-04-06', // วันจักรี
+    '2025-04-13', '2025-04-14', '2025-04-15', // วันสงกรานต์
+    '2025-05-01', // วันแรงงาน
+    '2025-05-04', // วันฉัตรมงคล
+    '2025-05-22', // วันวิสาขบูชา
+    '2025-06-03', // วันเฉลิมพระชนมพรรษาสมเด็จพระราชินี
+    '2025-07-28', // วันเฉลิมพระชนมพรรษา ร.10
+    '2025-08-12', // วันแม่แห่งชาติ
+    '2025-10-13', // วันคล้ายวันสวรรคต ร.9
+    '2025-10-23', // วันปิยมหาราช
+    '2025-12-05', // วันพ่อแห่งชาติ
+    '2025-12-10', // วันรัฐธรรมนูญ
+    '2025-12-24', '2025-12-25', // คริสต์มาส
+    '2025-12-31' // วันสิ้นปี
+];
+
+// โครงสร้างข้อมูลสำหรับราคารายวัน
+function setupDailyPricing() {
+    // ตรวจสอบว่ามีข้อมูลราคารายวันอยู่แล้วหรือไม่
+    Object.keys(roomPrices).forEach(roomType => {
+        if (!roomPrices[roomType].dailyPrices) {
+            // สร้างข้อมูลราคารายวันเริ่มต้น
+            roomPrices[roomType].dailyPrices = {};
+        }
+    });
+}
+// โครงสร้างข้อมูลสำหรับราคารายวัน
+function setupDailyPricing() {
+    // ตรวจสอบว่ามีข้อมูลราคารายวันอยู่แล้วหรือไม่
+    Object.keys(roomPrices).forEach(roomType => {
+        if (!roomPrices[roomType].dailyPrices) {
+            // สร้างข้อมูลราคารายวันเริ่มต้น
+            roomPrices[roomType].dailyPrices = {};
+        }
+    });
+}
+
+// แก้ไขฟังก์ชัน generateCalendar ให้รองรับราคารายวัน
+function generateCalendarWithDailyPrices(year, month, roomType) {
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startDay = firstDay.getDay();
+    
+    const monthNames = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+    
+    document.querySelector('.calendar-preview h3').textContent = `ปฏิทินห้องพัก - ${monthNames[month]} ${year}`;
+    
+    let calendarHTML = `
+        <div class="calendar-grid-header">อา</div>
+        <div class="calendar-grid-header">จ</div>
+        <div class="calendar-grid-header">อ</div>
+        <div class="calendar-grid-header">พ</div>
+        <div class="calendar-grid-header">พฤ</div>
+        <div class="calendar-grid-header">ศ</div>
+        <div class="calendar-grid-header">ส</div>
+    `;
+    
+    // วันจากเดือนก่อน
+    const prevMonthDays = startDay;
+    const prevMonth = month === 0 ? 11 : month - 1;
+    const prevMonthYear = month === 0 ? year - 1 : year;
+    const prevMonthDaysTotal = new Date(prevMonthYear, prevMonth + 1, 0).getDate();
+    
+    // วันในเดือนก่อน
+    for (let i = 0; i < prevMonthDays; i++) {
+        const day = prevMonthDaysTotal - prevMonthDays + i + 1;
+        calendarHTML += `<div class="calendar-day other-month">${day}</div>`;
+    }
+    
+    // วันในเดือนปัจจุบัน
+    for (let day = 1; day <= daysInMonth; day++) {
+        const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const isUnavailable = roomPrices[roomType].availability.unavailableDates.includes(dateString);
+        const statusClass = isUnavailable ? 'unavailable' : 'available';
+        
+        // กำหนดราคาตามประเภทของวัน (วันธรรมดา, วันหยุดสุดสัปดาห์, วันหยุดพิเศษ)
+        let priceType = 'weekday';
+        const dayOfWeek = new Date(year, month, day).getDay();
+        if (dayOfWeek === 0 || dayOfWeek === 6) {
+            priceType = 'weekend';
+        }
+        
+        // ตรวจสอบวันหยุดพิเศษ
+        if (holidays.includes(dateString)) {
+            priceType = 'holiday';
+        }
+        
+        // ดึงราคารายวัน (ถ้ามี) หรือใช้ราคาปกติ
+        let price;
+        if (roomPrices[roomType].dailyPrices[dateString]) {
+            price = roomPrices[roomType].dailyPrices[dateString];
+        } else {
+            price = roomPrices[roomType][priceType];
+        }
+        
+        calendarHTML += `
+            <div class="calendar-day ${statusClass}" data-date="${dateString}">
+                <div class="day-number">${day}</div>
+                <div class="price-container">
+                    <input type="number" class="daily-price-input" value="${price}" min="0" 
+                           data-date="${dateString}" data-original-price="${price}"
+                           style="width: 80px; text-align: center;" ${isUnavailable ? 'disabled' : ''}>
+                    <div class="price-type-indicator" title="${getPriceTypeLabel(priceType)}">${getPriceTypeSymbol(priceType)}</div>
+                </div>
+                <div class="room-status ${statusClass}">${isUnavailable ? 'ไม่ว่าง' : 'ว่าง'}</div>
+                <div class="day-controls">
+                    <button class="btn-toggle-status" title="เปลี่ยนสถานะว่าง/ไม่ว่าง">
+                        ${isUnavailable ? '📅' : '❌'}
+                    </button>
+                    <button class="btn-reset-price" title="คืนค่าราคาเริ่มต้น">↺</button>
+                </div>
+            </div>
+        `;
+    }
+    
+    // วันในเดือนถัดไป
+    const daysAfter = 42 - (prevMonthDays + daysInMonth);
+    for (let day = 1; day <= daysAfter; day++) {
+        calendarHTML += `<div class="calendar-day other-month">${day}</div>`;
+    }
+    
+    document.querySelector('.calendar-preview .calendar-grid').innerHTML = calendarHTML;
+    
+    // เพิ่ม event listener สำหรับการแก้ไขราคาและสถานะ
+    setupCalendarEvents(roomType);
+}
+
+// ฟังก์ชันเพิ่ม event listener ให้กับปฏิทิน
+function setupCalendarEvents(roomType) {
+    // Event listener สำหรับการเปลี่ยนสถานะห้อง
+    document.querySelectorAll('.btn-toggle-status').forEach(button => {
+        button.addEventListener('click', function() {
+            const dayCell = this.closest('.calendar-day');
+            const dateString = dayCell.getAttribute('data-date');
+            const priceInput = dayCell.querySelector('.daily-price-input');
+            
+            if (dayCell.classList.contains('available')) {
+                // เปลี่ยนเป็นไม่ว่าง
+                dayCell.classList.remove('available');
+                dayCell.classList.add('unavailable');
+                dayCell.querySelector('.room-status').textContent = 'ไม่ว่าง';
+                this.textContent = '📅';
+                
+                // ปิดการแก้ไขราคา
+                priceInput.disabled = true;
+                
+                // เพิ่มวันที่ลงในรายการวันที่ไม่ว่าง
+                if (!roomPrices[roomType].availability.unavailableDates.includes(dateString)) {
+                    roomPrices[roomType].availability.unavailableDates.push(dateString);
+                }
+            } else {
+                // เปลี่ยนเป็นว่าง
+                dayCell.classList.remove('unavailable');
+                dayCell.classList.add('available');
+                dayCell.querySelector('.room-status').textContent = 'ว่าง';
+                this.textContent = '❌';
+                
+                // เปิดการแก้ไขราคา
+                priceInput.disabled = false;
+                
+                // ลบวันที่ออกจากรายการวันที่ไม่ว่าง
+                const index = roomPrices[roomType].availability.unavailableDates.indexOf(dateString);
+                if (index > -1) {
+                    roomPrices[roomType].availability.unavailableDates.splice(index, 1);
+                }
+            }
+        });
+    });
+    
+    // Event listener สำหรับการแก้ไขราคา
+    document.querySelectorAll('.daily-price-input').forEach(input => {
+        input.addEventListener('change', function() {
+            const dateString = this.getAttribute('data-date');
+            const originalPrice = parseInt(this.getAttribute('data-original-price'));
+            const newPrice = parseInt(this.value);
+            
+            if (newPrice !== originalPrice) {
+                // บันทึกราคารายวัน
+                roomPrices[roomType].dailyPrices[dateString] = newPrice;
+                // เปลี่ยนสีพื้นหลังเพื่อแสดงว่ามีการแก้ไข
+                this.style.backgroundColor = '#fffde7';
+            } else {
+                // ลบราคารายวัน (กลับไปใช้ราคาปกติ)
+                delete roomPrices[roomType].dailyPrices[dateString];
+                // กลับสีพื้นหลังเป็นค่าเดิม
+                this.style.backgroundColor = '';
+            }
+        });
+    });
+    
+    // Event listener สำหรับการคืนค่าราคาเริ่มต้น
+    document.querySelectorAll('.btn-reset-price').forEach(button => {
+        button.addEventListener('click', function() {
+            const dayCell = this.closest('.calendar-day');
+            const dateString = dayCell.getAttribute('data-date');
+            const priceInput = dayCell.querySelector('.daily-price-input');
+            const originalPrice = parseInt(priceInput.getAttribute('data-original-price'));
+            
+            // คืนค่าราคาเริ่มต้น
+            priceInput.value = originalPrice;
+            priceInput.style.backgroundColor = '';
+            
+            // ลบราคารายวัน (กลับไปใช้ราคาปกติ)
+            delete roomPrices[roomType].dailyPrices[dateString];
+        });
+    });
+}
+
+// ฟังก์ชันเพิ่มเติมสำหรับแสดงประเภทราคา
+function getPriceTypeSymbol(priceType) {
+    switch(priceType) {
+        case 'weekday': return '🔵';
+        case 'weekend': return '🟠';
+        case 'holiday': return '🔴';
+        default: return '';
+    }
+}
+
+function getPriceTypeLabel(priceType) {
+    switch(priceType) {
+        case 'weekday': return 'ราคาวันธรรมดา';
+        case 'weekend': return 'ราคาวันหยุดสุดสัปดาห์';
+        case 'holiday': return 'ราคาวันหยุดพิเศษ';
+        default: return '';
+    }
+}
+
+// เพิ่ม CSS สำหรับปฏิทินแก้ไขราคา
+function addDailyPricingStyles() {
+    const styleElement = document.createElement('style');
+    styleElement.textContent = `
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+        }
+        .calendar-day {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: center;
+            border-radius: 4px;
+        }
+        .calendar-day.available {
+            background-color: #e8f5e9;
+        }
+        .calendar-day.unavailable {
+            background-color: #ffebee;
+        }
+        .calendar-day.other-month {
+            background-color: #f5f5f5;
+            color: #aaa;
+        }
+        .day-number {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .price-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 5px;
+        }
+        .daily-price-input {
+            padding: 4px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .price-type-indicator {
+            margin-left: 5px;
+            font-size: 16px;
+        }
+        .day-controls {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            margin-top: 5px;
+        }
+        .btn-toggle-status, .btn-reset-price {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 2px 5px;
+            border-radius: 4px;
+        }
+        .btn-toggle-status:hover, .btn-reset-price:hover {
+            background-color: rgba(0, 0, 0, 0.1);
+        }
+        .room-status {
+            font-size: 12px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+        .calendar-day .room-status.available {
+            background-color: #4caf50;
+            color: white;
+        }
+        .calendar-day .room-status.unavailable {
+            background-color: #f44336;
+            color: white;
+        }
+        .special-controls {
+            margin: 15px 0;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        .special-controls h3 {
+            margin-top: 0;
+            color: #1a237e;
+        }
+    `;
+    document.head.appendChild(styleElement);
+}
+
+// เพิ่มส่วนควบคุมพิเศษสำหรับการตั้งค่าราคาเป็นกลุ่ม
+function addSpecialPriceControls() {
+    const controlsDiv = document.createElement('div');
+    controlsDiv.className = 'special-controls';
+    controlsDiv.innerHTML = `
+        <h3>ตั้งค่าราคาแบบพิเศษ</h3>
+        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+            <div style="flex: 1;">
+                <label for="special-price-type">เลือกประเภทวัน:</label>
+                <select id="special-price-type" class="form-control" style="width: 100%; padding: 8px; margin-top: 5px;">
+                    <option value="selected">วันที่เลือกเท่านั้น</option>
+                    <option value="weekday">วันธรรมดา (จ-พฤ)</option>
+                    <option value="weekend">วันหยุดสุดสัปดาห์ (ศ-อา)</option>
+                    <option value="holiday">วันหยุดพิเศษ</option>
+                    <option value="all">ทุกวันในเดือนนี้</option>
+                </select>
+            </div>
+            <div style="flex: 1;">
+                <label for="special-price-value">กำหนดราคา:</label>
+                <input type="number" id="special-price-value" class="form-control" style="width: 100%; padding: 8px; margin-top: 5px;" min="0">
+            </div>
+        </div>
+        <button id="apply-special-price" class="btn btn-primary">นำไปใช้</button>
+        <button id="reset-all-prices" class="btn btn-secondary" style="margin-left: 10px;">คืนค่าราคาเริ่มต้นทั้งหมด</button>
+    `;
+    
+    // แทรกก่อนปฏิทิน
+    const calendarContainer = document.querySelector('.calendar-preview');
+    calendarContainer.parentNode.insertBefore(controlsDiv, calendarContainer);
+    
+    // เพิ่ม event listener
+    setTimeout(() => {
+        document.getElementById('apply-special-price').addEventListener('click', applySpecialPrice);
+        document.getElementById('reset-all-prices').addEventListener('click', resetAllPrices);
+    }, 500);
+}
+
+// ฟังก์ชันตั้งค่าราคาพิเศษ
+function applySpecialPrice() {
+    const priceType = document.getElementById('special-price-type').value;
+    const price = parseInt(document.getElementById('special-price-value').value);
+    const roomType = document.getElementById('availability-room-type').value;
+    
+    if (isNaN(price) || price <= 0) {
+        showAlert('กรุณากำหนดราคาให้ถูกต้อง', 'error');
+        return;
+    }
+    
+    const year = parseInt(document.getElementById('year-selector').value);
+    const month = parseInt(document.getElementById('month-selector').value);
+    let count = 0;
+    
+    // ดำเนินการตามประเภทที่เลือก
+    if (priceType === 'selected') {
+        // เฉพาะวันที่มีการเลือก (ยังไม่รองรับในเวอร์ชันนี้)
+        showAlert('คุณสมบัตินี้ยังไม่รองรับในเวอร์ชันปัจจุบัน', 'error');
+    } else {
+        // หาวันที่ทั้งหมดในเดือนที่เลือก
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        
+        for (let day = 1; day <= daysInMonth; day++) {
+            const dateObj = new Date(year, month, day);
+            const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            const dayOfWeek = dateObj.getDay(); // 0 = อาทิตย์, 1 = จันทร์, ...
+            const isWeekend = dayOfWeek === 0 || dayOfWeek === 5 || dayOfWeek === 6; // อาทิตย์, ศุกร์, เสาร์
+            const isHoliday = holidays.includes(dateString);
+            
+            let shouldUpdate = false;
+            
+            switch (priceType) {
+                case 'weekday':
+                    shouldUpdate = !isWeekend && !isHoliday;
+                    break;
+                case 'weekend':
+                    shouldUpdate = isWeekend && !isHoliday;
+                    break;
+                case 'holiday':
+                    shouldUpdate = isHoliday;
+                    break;
+                case 'all':
+                    shouldUpdate = true;
+                    break;
+            }
+            
+            if (shouldUpdate) {
+                // อัพเดทราคารายวัน
+                roomPrices[roomType].dailyPrices[dateString] = price;
+                count++;
+                
+                // อัพเดทหน้าจอ (ถ้ามี)
+                const input = document.querySelector(`.daily-price-input[data-date="${dateString}"]`);
+                if (input) {
+                    input.value = price;
+                    input.style.backgroundColor = '#fffde7'; // แสดงว่ามีการแก้ไข
+                }
+            }
+        }
+    }
+    
+    showAlert(`อัพเดทราคาสำเร็จ ${count} วัน`, 'success');
+}
+
+// ฟังก์ชันคืนค่าราคาเริ่มต้นทั้งหมด
+function resetAllPrices() {
+    const roomType = document.getElementById('availability-room-type').value;
+    
+    // ล้างราคารายวันทั้งหมด
+    roomPrices[roomType].dailyPrices = {};
+    
+    // อัพเดทปฏิทิน
+    const year = parseInt(document.getElementById('year-selector').value);
+    const month = parseInt(document.getElementById('month-selector').value);
+    generateCalendarWithDailyPrices(year, month, roomType);
+    
+    showAlert('คืนค่าราคาเริ่มต้นทั้งหมดเรียบร้อยแล้ว', 'success');
+}
+
+// แทนที่ฟังก์ชัน generateCalendar เดิมด้วยฟังก์ชันใหม่
+document.addEventListener('DOMContentLoaded', function() {
+    // เพิ่ม styles ก่อน
+    addDailyPricingStyles();
+    
+    // ตรวจสอบว่ามีฟังก์ชัน updateCalendar อยู่แล้วหรือไม่
+    if (typeof updateCalendar === 'function') {
+        // แบ็คอัพฟังก์ชันเดิม
+        const originalUpdateCalendar = updateCalendar;
+        
+        // โอเวอร์ไรด์ฟังก์ชัน updateCalendar
+        window.updateCalendar = function() {
+            const month = parseInt(document.getElementById('month-selector').value);
+            const year = parseInt(document.getElementById('year-selector').value);
+            const roomType = document.getElementById('availability-room-type').value;
+            
+            // สร้างโครงสร้างข้อมูลราคารายวัน (ถ้ายังไม่มี)
+            setupDailyPricing();
+            
+            // ใช้ฟังก์ชันปฏิทินใหม่
+            generateCalendarWithDailyPrices(year, month, roomType);
+        };
+        
+        // เพิ่มตัวควบคุมพิเศษ
+        setTimeout(() => {
+            addSpecialPriceControls();
+        }, 500);
+    }
+});
     </script>
 </body>
 </html>
